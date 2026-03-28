@@ -183,4 +183,4 @@ Hilfreiche Docker Befehle:
     
 4. Test Mujoco Simulator:
 
-       ./unitree_mujoco -r go2 -s scene_terrain.xml
+       ./unitree_mujoco -r g1 -s scene_terrain.xml
