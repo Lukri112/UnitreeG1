@@ -16,7 +16,18 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
 
 ### Ubuntu 20.04:
   
-  1.Download and run unitree_full_setup.py
+  1.Download and run unitree_full_setup.py  
+  2.Install all packages in the following order:
+
+    cd ~/unitree_sdk2_python
+    cd ~/unitree_sdk2
+    mkdir -p build && cd build
+    cmake ..
+    make -j"$(nproc)"
+    make install
+
+  3. Test Example Code:
+    unitree_sdk2_python/example
 
 
 ### Ubuntu 22.04 / 24.04:
