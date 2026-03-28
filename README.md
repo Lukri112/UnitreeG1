@@ -98,6 +98,7 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
     mv ~/UnitreeG1/unitree_rl_mjlab ~/
     mv ~/UnitreeG1/unitree_rl_lab ~/
     mv ~/UnitreeG1/unitree_mujoco ~/
+    cd ~
     rm -rf ~/UnitreeG1
 
     
