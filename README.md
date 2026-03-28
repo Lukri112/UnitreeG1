@@ -52,7 +52,6 @@ Hilfreiche Docker Befehle:
     cd ~/unitree_sdk2
     mkdir -p build && cd build
     cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics 
-    make -j"$(nproc)"
     sudo make install
 
     cd ~/unitree_sdk2_python
