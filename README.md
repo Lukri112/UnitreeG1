@@ -171,7 +171,7 @@ Hilfreiche Docker Befehle:
           -DABSL_PROPAGATE_CXX_STD=ON
         make -j"$(nproc)"
     
-        cd unitree_mujoco/simulate/
+        cd ~/unitree_mujoco/simulate/
         ln -s ~/.mujoco/mujoco-3.3.6 mujoco
         mkdir build && cd build
         cmake ..
