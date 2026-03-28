@@ -140,6 +140,35 @@ Hilfreiche Docker Befehle:
         sudo apt install libyaml-cpp-dev libspdlog-dev libboost-all-dev libglfw3-dev
     
  2. Install and compile Mujoco:
+
+        apt update
+        apt install -y \
+        git cmake build-essential \
+        libglfw3-dev libglew-dev libxinerama-dev libxcursor-dev libxi-dev \
+        libxrandr-dev libxxf86vm-dev libx11-dev libxext-dev libxrender-dev \
+        libxkbcommon-dev patchelf
+
+        mkdir -p /root/.mujoco
+        cd /root/.mujoco
+        # MuJoCo 3.3.6 Source holen
+        git clone --branch 3.3.6 --depth 1 https://github.com/google-deepmind/mujoco.git mujoco-3.3.6
+
+        # MuJoCo 3.3.6 bauen
+        cd /root/.mujoco/mujoco-3.3.6
+        mkdir -p build
+        cd build
+        export CC=/usr/bin/gcc
+        export CXX=/usr/bin/g++
+        export CXXFLAGS="-std=c++17"
+        export CFLAGS="-O2"
+
+        cmake .. \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_CXX_STANDARD=17 \
+          -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+          -DCMAKE_CXX_EXTENSIONS=OFF \
+          -DABSL_PROPAGATE_CXX_STD=ON
+        make -j"$(nproc)"
     
         cd unitree_mujoco/simulate/
         ln -s ~/.mujoco/mujoco-3.3.6 mujoco
@@ -147,6 +176,6 @@ Hilfreiche Docker Befehle:
         cmake ..
         make -j4
     
-3. Test Mujoco Simulator:
+4. Test Mujoco Simulator:
 
        ./unitree_mujoco -r go2 -s scene_terrain.xml
