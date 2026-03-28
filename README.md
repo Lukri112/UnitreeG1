@@ -30,8 +30,9 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
     pip3 install -e .
 
   3. Test Example Code:
-    unitree_sdk2_python/example
 
+    cd ~/unitree_sdk2_python/example/g1/audio# 
+    python3 g1_audio_client_example.py enp5s0
 
 ### Ubuntu 22.04 / 24.04:
   1.Download and unitree_full_setup.py  
@@ -62,7 +63,9 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
     pip3 install -e .
     
   7. Test Example Code:
-    unitree_sdk2_python/example
+
+    cd ~/unitree_sdk2_python/example/g1/audio# 
+    python3 g1_audio_client_example.py enp5s0
     
     
     
