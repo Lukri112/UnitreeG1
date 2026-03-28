@@ -32,8 +32,37 @@ check_docker_access() {
   fi
 }
 
+check_nvidia_container_toolkit() {
+  if ! dpkg -s nvidia-container-toolkit >/dev/null 2>&1; then
+    echo "[FEHLER] Das NVIDIA Container Toolkit ist nicht installiert."
+    echo "[HINWEIS] Bitte installiere zuerst 'nvidia-container-toolkit' auf dem Host,"
+    echo "          konfiguriere Docker mit 'sudo nvidia-ctk runtime configure --runtime=docker'"
+    echo "          und starte Docker danach neu."
+    exit 1
+  fi
+
+  if ! command -v nvidia-ctk >/dev/null 2>&1; then
+    echo "[FEHLER] 'nvidia-ctk' wurde nicht gefunden, obwohl das NVIDIA Container Toolkit installiert sein sollte."
+    echo "[HINWEIS] Bitte prüfe die Installation des NVIDIA Container Toolkits."
+    exit 1
+  fi
+
+  if ! docker run --rm --gpus all ubuntu:22.04 nvidia-smi >/dev/null 2>&1; then
+    echo "[FEHLER] Docker kann aktuell nicht mit GPU-Unterstützung starten."
+    echo "[HINWEIS] Bitte prüfe:"
+    echo "          1. NVIDIA-Treiber auf dem Host (nvidia-smi)"
+    echo "          2. NVIDIA Container Toolkit"
+    echo "          3. Docker Runtime-Konfiguration"
+    echo "          Danach das Skript erneut starten."
+    exit 1
+  fi
+
+  echo "[OK] NVIDIA Container Toolkit ist verfügbar"
+}
+
 check_docker_installed
 check_docker_access
+check_nvidia_container_toolkit
 
 mkdir -p "$HOME/Downloads"
 mkdir -p "$HOME/unitree_ws"
