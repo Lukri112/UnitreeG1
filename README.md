@@ -140,7 +140,7 @@ Hilfreiche Docker Befehle:
         cd ~
         sudo apt install libyaml-cpp-dev libspdlog-dev libboost-all-dev libglfw3-dev
     
- 2. Install and compile Mujoco:
+ 2. Install and compile Mujoco (Docker Container Version root):
 
         apt update
         apt install -y \
@@ -155,7 +155,7 @@ Hilfreiche Docker Befehle:
         git clone --branch 3.3.6 --depth 1 https://github.com/google-deepmind/mujoco.git mujoco-3.3.6
 
         # MuJoCo 3.3.6 bauen
-        cd /root/.mujoco/mujoco-3.3.6
+        cd /root/.mujoco/mujoco-3.3.6  
         mkdir -p build
         cd build
         export CC=/usr/bin/gcc
@@ -170,7 +170,11 @@ Hilfreiche Docker Befehle:
           -DCMAKE_CXX_EXTENSIONS=OFF \
           -DABSL_PROPAGATE_CXX_STD=ON
         make -j"$(nproc)"
-    
+
+        export LD_LIBRARY_PATH=/root/.mujoco/mujoco-3.3.6/build/lib:/root/.mujoco/mujoco-3.3.6/lib:$LD_LIBRARY_PATH
+        export LIBRARY_PATH=/root/.mujoco/mujoco-3.3.6/build/lib:/root/.mujoco/mujoco-3.3.6/lib:$LIBRARY_PATH
+        export CPATH=/root/.mujoco/mujoco-3.3.6/include:/root/.mujoco/mujoco-3.3.6/simulate:$CPATH
+
         cd ~/unitree_mujoco/simulate/
         ln -s ~/.mujoco/mujoco-3.3.6 mujoco
         mkdir build && cd build
