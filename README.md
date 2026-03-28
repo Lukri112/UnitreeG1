@@ -101,6 +101,12 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
     cd ~
     rm -rf ~/UnitreeG1
 
+### Unitree MJLAB:
+
+
+  1. Wie im Unitree Github beschrieben das setup durchführen:
+
+    https://github.com/unitreerobotics/unitree_rl_mjlab/blob/main/doc/setup_en.md
     
     
     
