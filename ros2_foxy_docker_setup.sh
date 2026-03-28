@@ -53,6 +53,7 @@ else
 
   docker run -it \
     --name "$CONTAINER_NAME" \
+    --gpus all \
     --network host \
     --privileged \
     -v "$HOME/Downloads:/root/Downloads" \
