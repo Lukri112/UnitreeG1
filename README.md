@@ -20,9 +20,9 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
 
 
 ### Ubuntu 22.04 / 24.04:
-  1.Download and unitree_full_setup.py
-  2.Download and run ros2_foxy_docker_setup.sh
-  3.Inside the Docker Containe change to Downloads  
+  1.Download and unitree_full_setup.py 
+  2.Download and run ros2_foxy_docker_setup.sh 
+  3.Inside the Docker Containe change to Downloads   
   
     cd root/Downloads
     
