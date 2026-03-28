@@ -86,6 +86,20 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
     source install/setup.bash
     ./install/unitree_ros2_example/bin/read_motion_state
 
+  6. Einzelne Projektordner clonen:
+
+    cd ~
+    git clone --filter=blob:none --no-checkout https://github.com/Lukri112/UnitreeG1.git
+    cd ~/UnitreeG1
+    git sparse-checkout init --cone
+    git sparse-checkout set unitree_rl_mjlab unitree_rl_lab unitree_mujoco
+    git checkout main
+
+    mv ~/UnitreeG1/unitree_rl_mjlab ~/
+    mv ~/UnitreeG1/unitree_rl_lab ~/
+    mv ~/UnitreeG1/unitree_mujoco ~/
+    rm -rf ~/UnitreeG1
+
     
     
     
