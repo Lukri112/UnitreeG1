@@ -47,13 +47,13 @@ Hilfreiche Docker Befehle:
 
 ### Next steps Ubuntu 20.04 / 22.04 / 24.04:
   
-  1. Install all packages in the following order:
+  1. Install all packages in the following order :
 
     cd ~/unitree_sdk2
     mkdir -p build && cd build
-    cmake ..
+    cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics 
     make -j"$(nproc)"
-    make install
+    sudo make install
 
     cd ~/unitree_sdk2_python
     export CYCLONEDDS_HOME=~/unitree_ros2/cyclonedds_ws/install
