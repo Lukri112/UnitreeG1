@@ -18,10 +18,13 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
   
   1. Download and run unitree_full_setup.py  
 
+    apt update
+    apt upgrade
+    apt install -y python3-pip sudo iproute2 git cmake
     python3 unitree_full_setup.py
 
 ### Ubuntu 22.04 / 24.04:
-  1. Download and unitree_full_setup.py  
+  1. Download unitree_full_setup.py  
   2. Download and run ros2_foxy_docker_setup.sh  
   3. Inside the Docker Containe change to Downloads    
   
