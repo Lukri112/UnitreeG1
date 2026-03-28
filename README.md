@@ -17,22 +17,8 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
 ### Ubuntu 20.04:
   
   1.Download and run unitree_full_setup.py  
-  2.Install all packages in the following order:
 
-    cd ~/unitree_sdk2
-    mkdir -p build && cd build
-    cmake ..
-    make -j"$(nproc)"
-    make install
-
-    cd ~/unitree_sdk2_python
-    export CYCLONEDDS_HOME=~/unitree_ros2/cyclonedds_ws/install
-    pip3 install -e .
-
-  3. Test Example Code:
-
-    cd ~/unitree_sdk2_python/example/g1/audio  
-    python3 g1_audio_client_example.py enp5s0
+    python3 unitree_full_setup.py
 
 ### Ubuntu 22.04 / 24.04:
   1.Download and unitree_full_setup.py  
@@ -47,11 +33,14 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
     apt upgrade
     apt install -y python3-pip sudo iproute2 git cmake
     
-  5.Run python3 unitree_full_setup.py
-  
-  6.Install all packages in the following order:
+  5.Run unitree_full_setup.py
 
-    
+    python3 unitree_full_setup.py
+
+### Next steps Ubuntu 20.04 / 22.04 / 24.04:
+  
+  1.Install all packages in the following order:
+
     cd ~/unitree_sdk2
     mkdir -p build && cd build
     cmake ..
@@ -62,10 +51,34 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
     export CYCLONEDDS_HOME=~/unitree_ros2/cyclonedds_ws/install
     pip3 install -e .
     
-  7. Test Example Code:
+  2. Test C++ Example Code:
+
+    cd ~/unitree_sdk2
+    find . -type f -executable
+     
+  3. Test Python Example Code:
 
     cd ~/unitree_sdk2_python/example/g1/audio 
     python3 g1_audio_client_example.py enp5s0
+
+  4. Test ROS2 Example Code (Simulation):
+
+    source ~/unitree_ros2/setup_local.sh
+
+    cd ~/unitree_ros2/example
+    colcon build
+
+    ./install/unitree_ros2_example/bin/read_motion_state
+
+  5. Test ROS2 Example Code (Realer Roboter):
+
+    source ~/unitree_ros2/setup.sh
+
+    cd ~/unitree_ros2/example
+    colcon build
+
+    ./install/unitree_ros2_example/bin/read_motion_state
+
     
     
     
