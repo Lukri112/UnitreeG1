@@ -19,12 +19,15 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
   1.Download and run unitree_full_setup.py  
   2.Install all packages in the following order:
 
-    cd ~/unitree_sdk2_python
     cd ~/unitree_sdk2
     mkdir -p build && cd build
     cmake ..
     make -j"$(nproc)"
     make install
+
+    cd ~/unitree_sdk2_python
+    export CYCLONEDDS_HOME=~/unitree_ros2/cyclonedds_ws/install
+    pip3 install -e .
 
   3. Test Example Code:
     unitree_sdk2_python/example
@@ -47,16 +50,19 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
   
   6.Install all packages in the following order:
 
-    cd ~/unitree_sdk2_python
+    
     cd ~/unitree_sdk2
     mkdir -p build && cd build
     cmake ..
     make -j"$(nproc)"
     make install
-  7. Test Example Code:
-    unitree_sdk2_python/example
-    
+
     cd ~/unitree_sdk2_python
     export CYCLONEDDS_HOME=~/unitree_ros2/cyclonedds_ws/install
     pip3 install -e .
+    
+  7. Test Example Code:
+    unitree_sdk2_python/example
+    
+    
     
