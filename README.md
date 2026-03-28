@@ -63,20 +63,22 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
 
   4. Test ROS2 Example Code (Simulation):
 
+    cd ~/unitree_ros2
+    source /opt/ros/foxy/setup.bash
+    source ~/unitree_ros2/cyclonedds_ws/install/setup.bash
     source ~/unitree_ros2/setup_local.sh
-
     cd ~/unitree_ros2/example
-    colcon build
-
+    source install/setup.bash
     ./install/unitree_ros2_example/bin/read_motion_state
 
   5. Test ROS2 Example Code (Realer Roboter):
 
+    cd ~/unitree_ros2
+    source /opt/ros/foxy/setup.bash
+    source ~/unitree_ros2/cyclonedds_ws/install/setup.bash
     source ~/unitree_ros2/setup.sh
-
     cd ~/unitree_ros2/example
-    colcon build
-
+    source install/setup.bash
     ./install/unitree_ros2_example/bin/read_motion_state
 
     
