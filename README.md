@@ -40,6 +40,9 @@ Hilfreiche Docker Befehle:
     apt update
     apt upgrade
     apt install -y python3-pip sudo iproute2 git cmake
+    apt install -y mesa-utils
+    alias ls='/bin/ls --color=auto'
+    alias ll='/bin/ls -alF'
     
   5. Run unitree_full_setup.py
 
