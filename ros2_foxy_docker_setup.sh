@@ -60,22 +60,49 @@ check_nvidia_container_toolkit() {
   echo "[OK] NVIDIA Container Toolkit ist verfügbar"
 }
 
+check_display_access() {
+  if [ -z "$DISPLAY" ]; then
+    echo "[FEHLER] DISPLAY ist nicht gesetzt."
+    echo "[HINWEIS] Bitte das Skript aus einer grafischen Sitzung heraus starten."
+    exit 1
+  fi
+
+  if ! command -v xhost >/dev/null 2>&1; then
+    echo "[FEHLER] xhost wurde nicht gefunden."
+    echo "[HINWEIS] Bitte installiere x11-xserver-utils auf dem Host."
+    exit 1
+  fi
+
+  echo "[INFO] Aktuelles DISPLAY:"
+  echo "$DISPLAY"
+
+  echo "[INFO] Aktuelle xhost-Freigaben:"
+  xhost
+
+  echo "[INFO] Erlaube root den Zugriff auf den X11-Server"
+  xhost +SI:localuser:root >/dev/null
+}
+
 check_docker_installed
 check_docker_access
 check_nvidia_container_toolkit
+check_display_access
 
 mkdir -p "$HOME/Downloads"
 mkdir -p "$HOME/unitree_ws"
 
 if [ "$(docker ps -a -q -f name=^/${CONTAINER_NAME}$)" ]; then
   echo "[INFO] Container existiert bereits"
+  echo "[HINWEIS] Falls du neue Mounts oder DISPLAY-Settings hinzugefügt hast, musst du den Container einmal löschen und neu erstellen:"
+  echo "          docker rm -f $CONTAINER_NAME"
 
   if [ "$(docker ps -q -f name=^/${CONTAINER_NAME}$)" ]; then
-    echo "[INFO] Container läuft bereits -> attach"
-    docker attach "$CONTAINER_NAME"
+    echo "[INFO] Container läuft bereits -> neue Shell"
+    docker exec -it "$CONTAINER_NAME" bash
   else
     echo "[INFO] Starte bestehenden Container"
-    docker start -ai "$CONTAINER_NAME"
+    docker start "$CONTAINER_NAME"
+    docker exec -it "$CONTAINER_NAME" bash
   fi
 else
   echo "[INFO] Erstelle neuen Container auf Basis von $IMAGE_NAME"
@@ -85,7 +112,9 @@ else
     --gpus all \
     --network host \
     --privileged \
+    -e DISPLAY="$DISPLAY" \
+    -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
     -v "$HOME/Downloads:/root/Downloads" \
-    -v "$HOME/unitree_ws:/root/unitree_ws" \
+    -v "$HOME/unitree_ws:/root" \
     "$IMAGE_NAME"
 fi
