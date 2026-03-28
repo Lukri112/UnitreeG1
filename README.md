@@ -24,4 +24,10 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
   2.Download and run ros2_foxy_docker_setup.sh
   3.Inside the Docker Containe change to Downloads
     cd root/Downloads
+  4.Install necessary tools 
+    apt update
+    apt upgrade
+    apt install -y python3-pip sudo iproute2 git cmake
+  5.Run python3 unitree_full_setup.py
+  6.
     
