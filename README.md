@@ -106,7 +106,30 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
 
   1. Wie im Unitree Github beschrieben das setup durchführen:
 
-    https://github.com/unitreerobotics/unitree_rl_mjlab/blob/main/doc/setup_en.md
+    apt update
+    apt install -y wget
+
+  2. Download and Install MiniConda -- alternative with venv and deadsnakes Python 3.11
+
+    mkdir -p ~/miniconda3
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh
+    bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
+    rm ~/miniconda3/miniconda.sh
     
+    ~/miniconda3/bin/conda init --all
+    source ~/.bashrc
     
+    conda create -n env_unitree_mjlab python=3.11
+    conda activate env_unitree_mjlab
+
+  3. Clone the repository using Git:
+
+    git clone https://github.com/unitreerobotics/unitree_rl_mjlab.git
+    
+  4. Install Dependencies:
+
+    sudo apt install -y libyaml-cpp-dev libboost-all-dev libeigen3-dev libspdlog-dev libfmt-dev
+    cd unitree_rl_mjlab
+    pip install -e .
+
     
