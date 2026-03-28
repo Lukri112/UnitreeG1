@@ -137,6 +137,7 @@ Hilfreiche Docker Befehle:
     
  1. Install Dependencies:
 
+        cd ~
         sudo apt install libyaml-cpp-dev libspdlog-dev libboost-all-dev libglfw3-dev
     
  2. Install and compile Mujoco:
