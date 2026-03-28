@@ -144,8 +144,6 @@ Hilfreiche Docker Befehle:
     
         cd unitree_mujoco/simulate/
         ln -s ~/.mujoco/mujoco-3.3.6 mujoco
-
-        cd unitree_mujoco/simulate
         mkdir build && cd build
         cmake ..
         make -j4
