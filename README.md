@@ -31,7 +31,7 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
 
   3. Test Example Code:
 
-    cd ~/unitree_sdk2_python/example/g1/audio# 
+    cd ~/unitree_sdk2_python/example/g1/audio  
     python3 g1_audio_client_example.py enp5s0
 
 ### Ubuntu 22.04 / 24.04:
@@ -64,7 +64,7 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
     
   7. Test Example Code:
 
-    cd ~/unitree_sdk2_python/example/g1/audio# 
+    cd ~/unitree_sdk2_python/example/g1/audio 
     python3 g1_audio_client_example.py enp5s0
     
     
