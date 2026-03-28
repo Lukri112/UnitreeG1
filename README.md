@@ -43,6 +43,9 @@ Hilfreiche Docker Befehle:
     apt install -y mesa-utils
     alias ls='/bin/ls --color=auto'
     alias ll='/bin/ls -alF'
+    #Check ob NVIDIA Treiber funktionieren
+    glxinfo | grep "OpenGL renderer"
+    glxinfo | grep "OpenGL vendor"
     
   5. Run unitree_full_setup.py
 
