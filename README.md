@@ -11,7 +11,11 @@ Der **Unitree G1 Edu+** ist ein humanoider Forschungs- und Entwicklungsroboter v
 ## Hinweis
 
 Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokumentation, Setup-Anleitungen, SDK-Hinweise, Experimente oder Beispielcode erweitert werden.
-Hilfreiche Docker Befehle: docker exec -it ros2_foxy_dev bash, docker ps -a, docker rm -f ros2_foxy_dev
+Hilfreiche Docker Befehle: 
+    
+    docker exec -it ros2_foxy_dev bash
+    docker ps -a
+    docker rm -f ros2_foxy_dev
 
 ## Setup
 
