@@ -121,13 +121,10 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
     
     conda create -n env_unitree_mjlab python=3.11
     conda activate env_unitree_mjlab
-
-  3. Clone the repository using Git:
-
-    git clone https://github.com/unitreerobotics/unitree_rl_mjlab.git
     
-  4. Install Dependencies:
+  3. Install Dependencies:
 
+    cd ~/unitree_rl_mjlab
     sudo apt install -y libyaml-cpp-dev libboost-all-dev libeigen3-dev libspdlog-dev libfmt-dev
     cd unitree_rl_mjlab
     pip install -e .
