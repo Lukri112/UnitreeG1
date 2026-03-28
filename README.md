@@ -134,4 +134,22 @@ Hilfreiche Docker Befehle:
     cd unitree_rl_mjlab
     pip install -e .
 
+### Unitree MUJOCO:
     
+ 1. Install Dependencies:
+
+        sudo apt install libyaml-cpp-dev libspdlog-dev libboost-all-dev libglfw3-dev
+    
+ 2. Install and compile Mujoco:
+    
+        cd unitree_mujoco/simulate/
+        ln -s ~/.mujoco/mujoco-3.3.6 mujoco
+
+        cd unitree_mujoco/simulate
+        mkdir build && cd build
+        cmake ..
+        make -j4
+    
+3. Test Mujoco Simulator:
+
+       ./unitree_mujoco -r go2 -s scene_terrain.xml
