@@ -29,8 +29,9 @@ Dann innerhalb des Docker containers folgende Zeilen ausführen um zu prüfen, o
     echo $DISPLAY
     ls /tmp/.X11-unix
 
-Falls der vom Container erstellte unitree_ws gesperrt ist für den User (Dateien kopieren):
+Falls der vom Container erstellte unitree_ws gesperrt ist für den User (Dateien kopieren) - Außerhalb des Containers ausführen:
 
+    
     sudo chown -R $USER:$USER ~/unitree_ws
     chmod -R u+rwX ~/unitree_ws
 
