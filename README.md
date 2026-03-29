@@ -191,7 +191,12 @@ Nach jeder Änderung im setup.sh, oder bei jedem neuen Terminal Aufruf / neuer C
 6. Start G1-Controller (29DOF):
 
         cd ~/unitree_rl_mjlab/deploy/robots/g1/build
-       ./g1_ctrl --network=lo
+   
+       # Simulation Network Interface
+        ./g1_ctrl --network lo 
+
+        # Real Robot Network Interface
+        ./g1_ctrl --network enp5s0
 
 ### Unitree MUJOCO:
     
@@ -247,3 +252,22 @@ Nach jeder Änderung im setup.sh, oder bei jedem neuen Terminal Aufruf / neuer C
 4. Test Mujoco Simulator:
 
        ./unitree_mujoco
+
+
+### Unitree ISAACLAB:
+
+    # Compile the robot_controller
+    cd ~/unitree_rl_lab/deploy/robots/g1_29dof # or other robots
+    mkdir build
+    cd build
+    cmake .. && make
+
+Roboter Controller starten:
+    
+    cd ~/unitree_rl_lab/deploy/robots/g1_29dof
+    
+    # Simulation Network Interface
+    ./g1_ctrl --network lo 
+
+    # Real Robot Network Interface
+    ./g1_ctrl --network enp5s0
