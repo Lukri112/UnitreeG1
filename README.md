@@ -137,7 +137,21 @@ Hilfreiche Docker Befehle:
     cd ~/unitree_rl_mjlab
     sudo apt install -y libyaml-cpp-dev libboost-all-dev libeigen3-dev libspdlog-dev libfmt-dev
     cd unitree_rl_mjlab
-    pip install -e .
+    pip install -e .    
+
+4. Build Deploy G1-Controller (29DOF):
+
+       cd deploy/robots/g1
+       mkdir build && cd build
+       cmake .. && make
+
+       export LD_LIBRARY_PATH=$HOME/unitree_ros2/cyclonedds_ws/install/lib:$LD_LIBRARY_PATH
+       export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+
+5. Start G1-Controller (29DOF):
+
+        cd ~/unitree_rl_mjlab/deploy/robots/g1/build
+       ./g1_ctrl --network=lo
 
 ### Unitree MUJOCO:
     
