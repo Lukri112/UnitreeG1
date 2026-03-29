@@ -56,7 +56,8 @@ Hilfreiche Docker Befehle:
   1. Install all packages in the following order :
 
     cd ~/unitree_sdk2
-    mkdir -p build && cd build
+    mkdir -p build
+    cd build
     cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics 
     sudo make install
 
@@ -142,13 +143,14 @@ Hilfreiche Docker Befehle:
 4. Build Deploy G1-Controller (29DOF):
 
        cd deploy/robots/g1
-       mkdir build && cd build
+       mkdir build
+       cd build
        cmake .. && make
 
        export LD_LIBRARY_PATH=$HOME/unitree_ros2/cyclonedds_ws/install/lib:$LD_LIBRARY_PATH
        export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
-5. Start G1-Controller (29DOF):
+6. Start G1-Controller (29DOF):
 
         cd ~/unitree_rl_mjlab/deploy/robots/g1/build
        ./g1_ctrl --network=lo
