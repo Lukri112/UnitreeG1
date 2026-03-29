@@ -130,6 +130,15 @@ Dann überprüfen, welches Network Interface im CyclondeDDS setup verwendet wird
 
 Nach jeder Änderung im setup.sh, oder bei jedem neuen Terminal Aufruf / neuer Container:
 
+Unitree ROS2 setup sourcen (Simulation Roboter):
+
+    source /opt/ros/foxy/setup.bash
+    source ~/unitree_ros2/cyclonedds_ws/install/setup.bash
+    source ~/unitree_ros2/setup_local.sh
+
+
+Unitree ROS2 setup sourcen (Realer Roboter):
+
     source /opt/ros/foxy/setup.bash
     source ~/unitree_ros2/cyclonedds_ws/install/setup.bash
     source ~/unitree_ros2/setup.sh
