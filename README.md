@@ -18,6 +18,17 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
     docker ps -a
     docker rm -f ros2_foxy_dev
 
+Achtung!! Vor jedem neuen Container start prüfen, ob der Container Zugriff auf den Display Adapter hat:
+
+    xhost +SI:localuser:root
+    echo $DISPLAY
+    xhost
+
+Dann innerhalb des Docker containers folgende Zeilen ausführen um zu prüfen, ob das gleiche Display gefunden wird:
+
+    echo $DISPLAY
+    ls /tmp/.X11-unix
+
 ## Setup
 
 ### Ubuntu 20.04:
