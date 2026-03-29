@@ -55,12 +55,16 @@ Hilfreiche Docker Befehle:
   
   1. Install all packages in the following order :
 
+    rm -rf unitree_sdk2
+    git clone https://github.com/unitreerobotics/unitree_sdk2
     cd ~/unitree_sdk2
     mkdir -p build
     cd build
     cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics 
     sudo make install
 
+    rm -rf unitree_sdk2_python
+    git clone https://github.com/unitreerobotics/unitree_sdk2_python
     cd ~/unitree_sdk2_python
     export CYCLONEDDS_HOME=~/unitree_ros2/cyclonedds_ws/install
     pip3 install -e .
