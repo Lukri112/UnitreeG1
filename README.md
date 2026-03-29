@@ -77,7 +77,7 @@ Falls der vom Container erstellte unitree_ws gesperrt ist für den User (Dateien
 
 ### Next steps Ubuntu 20.04 / 22.04 / 24.04:
   
-  1. Install all packages in the following order :
+  1. OPTIONAL!! Re-Install all SDK2 packages if errors occur in the following order :
 
     rm -rf unitree_sdk2
     git clone https://github.com/unitreerobotics/unitree_sdk2
