@@ -18,6 +18,9 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
     docker ps -a
     docker rm -f ros2_foxy_dev
 
+    #Ausführen des bash Skripts mit allen notwendigen Befehlen zur Simulation im Container 
+    source ~/Downloads/docker_new_terminal.sh 
+
 Achtung!! Vor jedem neuen Container start prüfen, ob der Container Zugriff auf den Display Adapter hat:
 
     xhost +SI:localuser:root
