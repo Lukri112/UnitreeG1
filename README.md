@@ -283,7 +283,7 @@ Sollte in Zukunft das Framework besser werden als Mjlab & Mujoco, wird Isaac Lab
 
 Roboter Controller starten:
     
-    cd ~/unitree_rl_lab/deploy/robots/g1_29dof
+    cd ~/unitree_rl_lab/deploy/robots/g1_29dof/build
     
     # Simulation Network Interface
     ./g1_ctrl --network lo 
