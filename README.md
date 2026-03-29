@@ -268,6 +268,7 @@ Für hochauflösende realistische Simulationsumgebungen, eignet sich jedoch bess
     
 4. Test Mujoco Simulator:
 
+        cd ~/unitree_mujoco/simulate/
        ./unitree_mujoco
 
 
