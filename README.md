@@ -51,8 +51,11 @@ Falls der vom Container erstellte unitree_ws gesperrt ist für den User (Dateien
 
 ### Ubuntu 22.04 / 24.04:
   1. Download unitree_full_setup.py  
-  2. Download and run ros2_foxy_docker_setup.sh  
-  3. Inside the Docker Containe change to Downloads    
+  2. Download and run ros2_foxy_docker_setup.sh
+
+    bash ./ros2_foxy_docker_setup.sh
+      
+  4. Inside the Docker Containe change to Downloads    
   
     cd root/Downloads
     
