@@ -106,7 +106,8 @@ Achtung!! Jeder PC kann ein anderes Network Interface (Ethernet / Wlan Adapter) 
 
     ip a
 
-Dann überprüfen, welches Network Interface im CyclondeDDS setup verwendet wird und falls nötig im setup.sh ändern (enp5s0, eth1, enp2s0..):
+Dann überprüfen, welches Network Interface im CyclondeDDS setup verwendet wird und falls nötig im setup.sh ändern  
+(enp5s0, eth1, enp2s0..):
 
     grep CYCLONEDDS_URI ~/unitree_ros2/setup.sh
 
