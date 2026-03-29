@@ -12,9 +12,9 @@ Der **Unitree G1 Edu+** ist ein humanoider Forschungs- und Entwicklungsroboter v
 
 Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokumentation, Setup-Anleitungen, SDK-Hinweise, Experimente oder Beispielcode erweitert werden.
 
-### Befehl für jedes neue Docker Terminal:
+### Befehl für jedes neue Docker Terminal (innerhalb des Containers!):
     
-    #Ausführen des bash Skripts mit allen notwendigen Befehlen zur Simulation im Container 
+    #Beinhaltet alle notwendigen Befehle zur Simulation in Mujoco, Mjlab und ROS2 im Container 
     source ~/Downloads/docker_new_terminal.sh 
 
 ### Hilfreiche Docker Befehle: 
