@@ -255,6 +255,8 @@ Nach jeder Änderung im setup.sh, oder bei jedem neuen Terminal Aufruf / neuer C
 
 
 ### Unitree ISAACLAB:
+Isaac Lab wird aufgrund der größeren Sim2Real Gap zurzeit nur als zweiter Controller verwendet.
+Sollte in Zukunft das Framework besser werden als Mjlab & Mujoco, wird Isaac Lab näher behandelt.
 
     # Compile the robot_controller
     cd ~/unitree_rl_lab/deploy/robots/g1_29dof # or other robots
