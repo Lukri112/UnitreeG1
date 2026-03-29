@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 echo "[INFO] Prüfe DISPLAY im Container..."
 echo "$DISPLAY"
 
