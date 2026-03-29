@@ -151,7 +151,9 @@ Nach jeder Änderung im setup.sh, oder bei jedem neuen Terminal Aufruf / neuer C
     rm -rf ~/UnitreeG1
 
 ### Unitree MJLAB:
-
+MJLAB wird aufgrund der geringen Sim2Real Gap zurzeit als Trainings Framework & als Controller verwendet.
+Es eignet sich hervorragend für einfache Environments und schnelles Prototyping einer Policy.
+Für hochauflösende realistische Simulationsumgebungen, eignet sich jedoch besser Isaac Sim & Isaac Lab.
 
   1. Wie im Unitree Github beschrieben das setup durchführen:
 
@@ -254,7 +256,7 @@ Nach jeder Änderung im setup.sh, oder bei jedem neuen Terminal Aufruf / neuer C
        ./unitree_mujoco
 
 
-### Unitree ISAACLAB:
+### Unitree ISAAC LAB:
 Isaac Lab wird aufgrund der größeren Sim2Real Gap zurzeit nur als zweiter Controller verwendet.
 Sollte in Zukunft das Framework besser werden als Mjlab & Mujoco, wird Isaac Lab näher behandelt.
 
