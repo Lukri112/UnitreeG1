@@ -102,6 +102,21 @@ Dieses Repository ist aktuell bewusst schlank gehalten und kann später um Dokum
     source install/setup.bash
     ./install/unitree_ros2_example/bin/read_motion_state
 
+Achtung!! Jeder PC kann ein anderes Network Interface (Ethernet / Wlan Adapter) haben, deshalb bitte prüfen:
+
+    ip a
+
+Dann überprüfen, welches Network Interface im CyclondeDDS setup verwendet wird und falls nötig im setup.sh ändern (enp5s0, eth1, enp2s0..):
+
+    grep CYCLONEDDS_URI ~/unitree_ros2/setup.sh
+
+Nach jeder Änderung im setup.sh, oder bei jedem neuen Terminal Aufruf / neuer Container:
+
+    source /opt/ros/foxy/setup.bash
+    source ~/unitree_ros2/cyclonedds_ws/install/setup.bash
+    source ~/unitree_ros2/setup.sh
+
+
   6. Einzelne Projektordner clonen:
 
     cd ~
