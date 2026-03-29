@@ -231,7 +231,9 @@ Nach jeder Änderung im setup.sh, oder bei jedem neuen Terminal Aufruf / neuer C
           -DABSL_PROPAGATE_CXX_STD=ON
         make -j"$(nproc)"
 
-        export LD_LIBRARY_PATH=/root/.mujoco/mujoco-3.3.6/build/lib:/root/.mujoco/mujoco-3.3.6/lib:$LD_LIBRARY_PATH
+        #Bei jedem neuen Container start werden diese export Befehle benötigt!!!
+
+        export LD_LIBRARY_PATH=/root/.mujoco/mujoco-3.3.6/build/lib:/root/.mujoco/mujoco-3.3.6/lib:$LD_LIBRARY_PATH    
         export LIBRARY_PATH=/root/.mujoco/mujoco-3.3.6/build/lib:/root/.mujoco/mujoco-3.3.6/lib:$LIBRARY_PATH
         export CPATH=/root/.mujoco/mujoco-3.3.6/include:/root/.mujoco/mujoco-3.3.6/simulate:$CPATH
 
