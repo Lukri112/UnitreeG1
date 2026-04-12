@@ -32,3 +32,32 @@ Sicher bestätigt wurde die **strukturelle Kompatibilität**. Nicht vollständig
 **Praktisches Fazit**
 Das Problem konnte **weitgehend gelöst** werden.
 Es wurde gezeigt, dass die neue Policy **strukturell und deploy-seitig** zum realen G1-29DOF-Setup passt. Vor dem Einsatz auf echter Hardware sollte lediglich noch ein kurzer **PT-/ONNX- oder Runtime-Abgleich** durchgeführt werden, damit auch die letzte semantische Sicherheit gegeben ist.
+
+
+## Problemstellung
+Es sollte geklärt werden, worin sich zwei ONNX-Policies unterscheiden und wie beide auf einem Roboter deployt werden können. Dabei standen insbesondere die Anzahl der Inputs und Outputs, die unterschiedlichen Beobachtungsräume aus MJLab und IsaacLab sowie die dafür notwendige RobotState- und Adapter-Struktur im Mittelpunkt.
+
+## Vorgehensweise
+Zunächst wurden beide Policies technisch verglichen. Dabei wurde festgestellt, dass beide Modelle jeweils **1 Input** und **1 Output** besitzen. Der Input heißt in beiden Fällen `obs`, der Output `actions`. Die Unterschiede wurden vor allem in der Größe des Input-Vektors erkannt:  
+- die **MJLab-Policy** verwendet **98 Input-Features**  
+- die **IsaacLab-Policy** verwendet **480 Input-Features**  
+
+Der Output ist bei beiden Policies gleich aufgebaut:  
+- **29 Output-Werte** (`actions`)  
+
+Anschließend wurde beschrieben, dass für den Robotereinsatz ein gemeinsamer **RobotState** benötigt wird, der die relevanten Sensordaten und Zustände des Roboters bündelt, zum Beispiel Gelenkpositionen, Gelenkgeschwindigkeiten, IMU-Daten, Basisorientierung, Kommandos und gegebenenfalls Kontaktinformationen. Aus diesem gemeinsamen RobotState sollten dann über zwei getrennte **Observations-Adapter** die jeweils passenden Eingaben für die beiden Policies erzeugt werden.
+
+Ebenso wurde berücksichtigt, dass nicht nur die Inputs, sondern auch die Interpretation der Outputs policy-spezifisch behandelt werden muss. Daher wurde zusätzlich die Verwendung separater **Action-Adapter** empfohlen.
+
+## Lösung
+Als Lösung wurde empfohlen, beide Policies nicht in ein gemeinsames Beobachtungsformat zu überführen, sondern sie als zwei getrennte Controller-Profile mit gemeinsamer Runtime auf dem Roboter zu deployen.
+
+Dafür sollte folgende Struktur verwendet werden:
+- ein gemeinsamer **RobotState** als zentrale Zustandsrepräsentation des Roboters
+- ein **ObsAdapter** für die MJLab-Policy mit **98 Inputs**
+- ein **ObsAdapter** für die IsaacLab-Policy mit **480 Inputs**
+- je ein passender **ActionAdapter** für die Ausgabe von **29 Actions**
+- ein gemeinsames **Safety-Layer** zur Absicherung auf dem Roboter
+- eine gemeinsame Inferenzschicht, zum Beispiel über **ONNX Runtime**
+
+Dadurch kann jede Policy mit ihrer ursprünglichen Beobachtungsstruktur, ihrer eigenen Input-Aufbereitung und ihrer passenden Output-Interpretation sicher und korrekt auf dem Roboter ausgeführt werden.
