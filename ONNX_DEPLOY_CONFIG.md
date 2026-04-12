@@ -1,168 +1,58 @@
-**Problemstellung**
-Es sollte geprüft werden, ob zwei ONNX-Policies zu der realen Deploy-Konfiguration eines **Unitree G1 Edu mit 29DOF** passen und ob die neue eigene Policy mit dem offiziellen G1-Deploy-Setup kompatibel ist.
+## Zusammenfassung: Observation-Inputs, Outputs und Joint-Reihenfolge bei Reinforcement-Policies
 
-**Vorgehensweise**
-Es wurden:
+**Problemstellung**  
+Es sollte geprüft werden, wie zwei ONNX-Policies bezüglich ihrer Ein- und Ausgaben aufgebaut sind und ob sie mit dem realen Deploy-Setup eines **Unitree G1 Edu mit 29 DoF** kompatibel sind.
 
-* die hochgeladene `deploy.yaml` analysiert,
-* beide ONNX-Policies hinsichtlich **Ein- und Ausgangsdimensionen** verglichen,
-* die **Observation- und Action-Struktur** abgeglichen,
-* sowie der offizielle **Deploy-Code aus dem Unitree-GitHub-Repo** geprüft, um die tatsächliche Zuordnung von `obs[98]` und `actions[29]` nachzuvollziehen.
+**Grundprinzip**  
+Bei Reinforcement-Policies besteht der **Input** aus einem Observation-Vektor, also einer geordneten Liste von Zustandsinformationen des Roboters. Dazu gehören typischerweise Basisbewegung, Gravitation, Kommandos, Gelenkpositionen, Gelenkgeschwindigkeiten und oft auch die vorherige Aktion.  
+Der **Output** besteht aus einem Action-Vektor, also den von der Policy vorhergesagten Sollwerten für die Aktoren, hier für **29 Gelenke**.
 
-**Ergebnis / Lösung**
-Es wurde festgestellt, dass beide Policies **formal kompatibel** sind:
+**Vergleich der Policies**  
+Es wurde festgestellt, dass beide untersuchten Policies jeweils genau **einen Input** und **einen Output** besitzen:
+- Input: `obs`
+- Output: `actions`
 
-* **98 Beobachtungen** werden als Eingabe erwartet,
-* **29 Aktionen** werden ausgegeben.
+Die Policies unterscheiden sich jedoch in der Größe des Observation-Vektors:
+- **MJLab-Policy:** 98 Inputs
+- **IsaacLab-Policy:** 480 Inputs
 
-Außerdem wurde bestätigt, dass die `deploy.yaml` dazu passt:
+Beide Policies erzeugen jedoch denselben Action-Output:
+- **29 Actions**
 
-* 29 Gelenke sind definiert,
-* 29 Skalierungswerte sind vorhanden,
-* 29 Offsets sind enthalten,
-* und die Observationen ergeben in Summe genau **98 Eingangsgrößen**.
+**Bedeutung für Deployment**  
+Damit eine Policy korrekt auf dem Roboter läuft, reicht es nicht, nur dieselbe Anzahl an Inputs und Outputs zu haben. Entscheidend ist auch, dass die **semantische Reihenfolge** identisch ist:
+- Welche Beobachtung steht an welcher Stelle im Observation-Vektor?
+- Welches Gelenk gehört zu welchem Action-Eintrag?
+- Welche Offsets, Skalierungen und Default-Posen werden verwendet?
 
-Zusätzlich wurde im offiziellen Unitree-Deploy-Code bestätigt, dass genau dieses Schema verwendet wird. Dadurch konnte die Repo-Policy als passende Referenz eingeordnet werden.
+Ein zentraler Punkt ist dabei die **Joint-Reihenfolge**.  
+Die Policy lernt im Training nicht nur, *welche* 29 Gelenke existieren, sondern auch, **in welcher festen Reihenfolge** diese im Observation-Vektor und im Action-Vektor angeordnet sind. Genau diese Reihenfolge muss später in der `config.yaml`, in der `deploy.yaml` und im Controller- bzw. Deploy-Code konsistent beibehalten werden.
 
-Für die neue eigene Policy wurde daraus abgeleitet, dass sie **sehr wahrscheinlich als Drop-in-Ersatz verwendet werden kann**, sofern sie mit derselben Beobachtungs- und Aktionsreihenfolge trainiert und exportiert wurde wie die Referenz-Policy.
+Denn:
+- die **Observationen** für Gelenkpositionen und Gelenkgeschwindigkeiten werden in genau dieser Reihenfolge in den Input geschrieben,
+- die **Actions** werden in genau dieser Reihenfolge wieder auf die Gelenke verteilt,
+- auch **`default_joint_pos`**, **Offsets**, **Skalierungen** und andere gelenkbezogene Parameter müssen exakt zu derselben Reihenfolge passen.
 
-**Restunsicherheit**
-Sicher bestätigt wurde die **strukturelle Kompatibilität**. Nicht vollständig bewiesen werden konnte allein, ob die neue Policy auch **semantisch exakt dieselbe Reihenfolge** von Gelenken, Observationen und Actions verwendet wie das originale Training- und Export-Setup.
+Schon wenn die Reihenfolge zwischen **Training** und **Deployment** an nur einer Stelle abweicht, kann die Policy formal zwar weiterhin dieselben Dimensionen haben, aber inhaltlich falsche Werte lesen oder auf falsche Gelenke schreiben. Dann würde zum Beispiel ein Action-Eintrag, der im Training für das Knie gelernt wurde, im Deployment möglicherweise auf der Hüfte oder am Arm landen. In so einem Fall ist die Policy trotz passender Tensorformen **nicht tatsächlich kompatibel**.
 
-**Praktisches Fazit**
-Das Problem konnte **weitgehend gelöst** werden.
-Es wurde gezeigt, dass die neue Policy **strukturell und deploy-seitig** zum realen G1-29DOF-Setup passt. Vor dem Einsatz auf echter Hardware sollte lediglich noch ein kurzer **PT-/ONNX- oder Runtime-Abgleich** durchgeführt werden, damit auch die letzte semantische Sicherheit gegeben ist.
+**Empfohlene Architektur**  
+Deshalb ist ein gemeinsamer **RobotState** sinnvoll, der alle Rohdaten des Roboters zentral bereitstellt. Aus diesem RobotState werden dann policy-spezifisch die passenden Eingaben über **ObsAdapter** erzeugt. Ebenso sollten die Outputs über passende **ActionAdapter** interpretiert werden.  
+So kann sichergestellt werden, dass sowohl die Beobachtungen als auch die Aktionen in der exakt richtigen Reihenfolge verarbeitet werden.
 
+**Ergebnis**  
+Für die 29-DoF-G1-Deploy-Konfiguration wurde bestätigt, dass die Referenz-Policy strukturell zum offiziellen Setup passt:
+- **98 Observation-Inputs**
+- **29 Action-Outputs**
+- passende `deploy.yaml` mit 29 Gelenken, 29 Offsets und 29 Skalierungswerten
 
-## Problemstellung
-Es sollte geklärt werden, worin sich zwei ONNX-Policies unterscheiden und wie beide auf einem Roboter deployt werden können. Dabei standen insbesondere die Anzahl der Inputs und Outputs, die unterschiedlichen Beobachtungsräume aus MJLab und IsaacLab sowie die dafür notwendige RobotState- und Adapter-Struktur im Mittelpunkt.
+Damit ist die neue eigene Policy **strukturell kompatibel**, sofern sie mit derselben Beobachtungs- und Aktionsreihenfolge trainiert und exportiert wurde wie die Referenz-Policy.
 
-## Vorgehensweise
-Zunächst wurden beide Policies technisch verglichen. Dabei wurde festgestellt, dass beide Modelle jeweils **1 Input** und **1 Output** besitzen. Der Input heißt in beiden Fällen `obs`, der Output `actions`. Die Unterschiede wurden vor allem in der Größe des Input-Vektors erkannt:  
-- die **MJLab-Policy** verwendet **98 Input-Features**  
-- die **IsaacLab-Policy** verwendet **480 Input-Features**  
+**Restunsicherheit**  
+Sicher bestätigt wurde die **formale bzw. strukturelle Kompatibilität**. Nicht vollständig bewiesen ist allein, ob die neue Policy auch **semantisch exakt dieselbe Reihenfolge** von Observationen, Gelenken und Actions verwendet wie das originale Training- und Export-Setup.
 
-Der Output ist bei beiden Policies gleich aufgebaut:  
-- **29 Output-Werte** (`actions`)  
+**Praktisches Fazit**  
+Observation-Inputs und Action-Outputs bei RL-Policies lassen sich am besten so erklären:  
+Die Policy erhält einen **geordneten Zustandsvektor** des Roboters als Input und erzeugt daraus einen **geordneten Aktionsvektor** als Output. Für erfolgreiches Deployment müssen dabei nicht nur die Dimensionen stimmen, sondern auch die **genaue inhaltliche Zuordnung jedes Eintrags**.
 
-Anschließend wurde beschrieben, dass für den Robotereinsatz ein gemeinsamer **RobotState** benötigt wird, der die relevanten Sensordaten und Zustände des Roboters bündelt, zum Beispiel Gelenkpositionen, Gelenkgeschwindigkeiten, IMU-Daten, Basisorientierung, Kommandos und gegebenenfalls Kontaktinformationen. Aus diesem gemeinsamen RobotState sollten dann über zwei getrennte **Observations-Adapter** die jeweils passenden Eingaben für die beiden Policies erzeugt werden.
-
-Ebenso wurde berücksichtigt, dass nicht nur die Inputs, sondern auch die Interpretation der Outputs policy-spezifisch behandelt werden muss. Daher wurde zusätzlich die Verwendung separater **Action-Adapter** empfohlen.
-
-## Lösung
-Als Lösung wurde empfohlen, beide Policies nicht in ein gemeinsames Beobachtungsformat zu überführen, sondern sie als zwei getrennte Controller-Profile mit gemeinsamer Runtime auf dem Roboter zu deployen.
-
-Dafür sollte folgende Struktur verwendet werden:
-- ein gemeinsamer **RobotState** als zentrale Zustandsrepräsentation des Roboters
-- ein **ObsAdapter** für die MJLab-Policy mit **98 Inputs**
-- ein **ObsAdapter** für die IsaacLab-Policy mit **480 Inputs**
-- je ein passender **ActionAdapter** für die Ausgabe von **29 Actions**
-- ein gemeinsames **Safety-Layer** zur Absicherung auf dem Roboter
-- eine gemeinsame Inferenzschicht, zum Beispiel über **ONNX Runtime**
-
-Dadurch kann jede Policy mit ihrer ursprünglichen Beobachtungsstruktur, ihrer eigenen Input-Aufbereitung und ihrer passenden Output-Interpretation sicher und korrekt auf dem Roboter ausgeführt werden.
-
-
-# Zusammenfassung
-
-## Problemstellung
-Es wurde ein MJLab-Checkpoint für den Unitree G1 trainiert, bei dem ein **Crouch-Walk** erlernt wurde.  
-Beim Testen des exportierten `policy.onnx` in MuJoCo sim2sim fiel der Roboter jedoch nur um und zeigte Zuckbewegungen, obwohl erwartet wurde, dass Training und Deployment übereinstimmen.  
-Es sollte geklärt werden, ob die Ursache in einer falschen Joint-Reihenfolge, einem fehlerhaften ONNX-Export, einem Controller-Mismatch oder in einer nicht passenden Deploy-Konfiguration liegt. 
-
-## Wichtige technische Eckdaten
-- Es wurde eine **Policy mit 29 Actions** verwendet. :contentReference[oaicite:1]{index=1}
-- Die Actor-Observation bestand aus **98 Werten**. Zusammensetzung:
-  - `base_ang_vel`: 3
-  - `projected_gravity`: 3
-  - `velocity_commands`: 3
-  - `gait_phase`: 2
-  - `joint_pos_rel`: 29
-  - `joint_vel_rel`: 29
-  - `last_action`: 29  
-  Summe: **98 Inputs**. 
-- Es wurde mit `step_dt = 0.02` gearbeitet, also mit **50 Hz**. :contentReference[oaicite:3]{index=3}
-- Es wurde eine `JointPositionAction` mit **29-D Output**, `scale` und `offset` verwendet. :contentReference[oaicite:4]{index=4}
-
-## Vorgehensweise
-Zuerst wurde geprüft, ob ein allgemeiner Fehler in der sim2sim-Bridge oder in der Joint-Reihenfolge vorliegt.  
-Dazu wurden Controller-Dateien, `deploy.yaml`, die MuJoCo-Actuator-Reihenfolge, die Sensor-Reihenfolge und das Training-Environment untersucht. 
-
-Anschließend wurde in MuJoCo die Szeneninformation ausgegeben.  
-Dabei wurde festgestellt, dass:
-- **29 Actuators** vorhanden sind,
-- die Reihenfolge der Actuators und Sensoren konsistent ist,
-- keine zusätzliche Remapping-Logik im Controller verwendet wird,
-- die Sensorblöcke für Position, Geschwindigkeit und Torque sauber in derselben Reihenfolge angeordnet sind. 
-
-Danach wurde das Training-Environment analysiert.  
-Dabei wurde bestätigt, dass:
-- die Observation-Struktur des Trainings mit dem Deploy-Format kompatibel ist,
-- `gait_phase`, `joint_pos_rel`, `joint_vel_rel` und `last_action` im Training vorhanden sind,
-- die Policy also grundsätzlich auf dieselbe Input-Struktur ausgelegt wurde. 
-
-Zum Schluss wurde die Datei `g1_constants_crouch.py` geprüft, mit der die Crouch-Position im Training definiert wurde. Dabei wurde erkannt, dass die trainierte Nominalpose deutlich tiefer war als die Pose im aktuellen `deploy.yaml`. 
-
-## Erkenntnisse
-Es konnte ausgeschlossen werden, dass die Hauptursache in der Joint-Reihenfolge oder in der allgemeinen MuJoCo-Bridge liegt, weil:
-- dieselbe Simulationsumgebung mit einer anderen Policy stabil funktionierte,
-- die Joint- und Sensor-Reihenfolge konsistent war,
-- Controller und Sensordaten linear und korrekt verarbeitet wurden. 
-
-Als Hauptursache wurde ein **Mismatch zwischen trainierter Crouch-Nominalpose und Deploy-Konfiguration** identifiziert.
-
-### Trainierte Crouch-Pose
-Im Training wurde mit einer tiefen Haltung gearbeitet:
-- `hip_pitch = -0.77`
-- `knee = 1.32`
-- `ankle_pitch = -0.68`
-- `left_shoulder_pitch = 0.2`
-- `left_shoulder_roll = 0.2`
-- `right_shoulder_pitch = 0.2`
-- `right_shoulder_roll = -0.2`
-- `elbow = 0.6`
-- Base-Höhe `z = 0.65` :contentReference[oaicite:10]{index=10}
-
-### Deploy-Pose vorher
-Im `deploy.yaml` war dagegen eine deutlich aufrechtere Pose eingetragen:
-- `hip_pitch = -0.1`
-- `knee = 0.3`
-- `ankle_pitch = -0.2`
-- Arme in anderer Ruhehaltung. :contentReference[oaicite:11]{index=11}
-
-Dadurch wurde die Policy direkt mit einem Zustand gestartet, der nicht der trainierten Verteilung entsprach.  
-Insbesondere wurde dadurch `joint_pos_rel` bereits beim Start falsch relativ zur erwarteten Crouch-Pose berechnet. 
-
-## Lösung
-Als Lösung wurde empfohlen, im `deploy.yaml` die Einträge
-- `default_joint_pos`
-- `actions.JointPositionAction.offset`
-
-an die trainierte Crouch-Pose anzupassen. 
-
-### Verwendete 29er-Reihenfolge
-Die Reihenfolge wurde als korrekt bestätigt:
-1. linkes Bein (6)
-2. rechtes Bein (6)
-3. Waist (3)
-4. linker Arm (7)
-5. rechter Arm (7) 
-
-### Eingetragene Crouch-Werte
-Folgende Werte wurden zum Ersetzen empfohlen:
-- `default_joint_pos` = Crouch-Pose
-- `offset` = dieselbe Crouch-Pose  
-mit:
-- Beine: `[-0.77, 0, 0, 1.32, -0.68, 0]`
-- Waist: `[0, 0, 0]`
-- linker Arm: `[0.2, 0.2, 0, 0.6, 0, 0, 0]`
-- rechter Arm: `[0.2, -0.2, 0, 0.6, 0, 0, 0]` 
-
-## Endergebnis
-Das Problem wurde nicht durch eine falsche Joint-Reihenfolge verursacht, sondern durch einen **Mismatch zwischen trainierter Crouch-Initialpose und der im Deployment verwendeten Standardpose**.  
-Die Lösung bestand darin, die Deploy-Konfiguration auf die im Training verwendete Crouch-Nominalpose umzustellen, damit die 98-dimensionalen Robot States und die 29-dimensionalen Action-Outputs wieder zur trainierten Policy passen. 
-
-
-
-## Ergebnis
-Das Problem wurde durch die Umstellung des erwarteten Robot Types von **5 auf 6** für den 29DoF-G1 behoben. Die Controller in `unitree_rl_mjlab`, MuJoCo und Isaac Lab konnten danach erfolgreich gestartet werden.
+Die **korrekte Joint-Reihenfolge** ist dabei einer der wichtigsten Punkte überhaupt:  
+Sie muss im **Training**, in der **`config.yaml`**, in der **`deploy.yaml`** und in der **Runtime/Controller-Logik** vollständig konsistent sein. Nur dann bedeuten Observationen und Actions im Deployment dasselbe wie im Training.
