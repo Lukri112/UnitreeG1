@@ -19,7 +19,7 @@ def unitree_g1_23dof_rough_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
   """Create Unitree G1-23DOF rough terrain velocity configuration."""
   cfg = make_velocity_env_cfg()
 
-  cfg.sim.mujoco.ccd_iterations = 500
+  cfg.sim.mujoco.ccd_iterations = 750
   cfg.sim.contact_sensor_maxmatch = 500
   cfg.sim.nconmax = 48
 
@@ -53,10 +53,9 @@ def unitree_g1_23dof_rough_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     name="self_collision",
     primary=ContactMatch(mode="subtree", pattern="pelvis", entity="robot"),
     secondary=ContactMatch(mode="subtree", pattern="pelvis", entity="robot"),
-    fields=("found", "force"),
+    fields=("found",),
     reduce="none",
     num_slots=1,
-    history_length=4,
   )
   cfg.scene.sensors = (cfg.scene.sensors or ()) + (
     feet_ground_cfg,
@@ -127,14 +126,13 @@ def unitree_g1_23dof_rough_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     r".*wrist.*": 0.1,
   }
 
-  cfg.rewards["body_orientation_l2"].params["asset_cfg"].body_names = ("torso_link",)
   cfg.rewards["body_ang_vel"].params["asset_cfg"].body_names = ("torso_link",)
   cfg.rewards["foot_clearance"].params["asset_cfg"].site_names = site_names
   cfg.rewards["foot_slip"].params["asset_cfg"].site_names = site_names
   cfg.rewards["self_collisions"] = RewardTermCfg(
     func=mdp.self_collision_cost,
     weight=-1.0,
-    params={"sensor_name": self_collision_cfg.name, "force_threshold": 10.0},
+    params={"sensor_name": self_collision_cfg.name},
   )
 
   # Apply play mode overrides.

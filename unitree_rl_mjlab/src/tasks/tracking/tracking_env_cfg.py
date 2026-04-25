@@ -10,7 +10,6 @@ Commit: f8e20c880d9c8ec7172a13d3a88a65e3a5a88448
 """
 
 from mjlab.envs import ManagerBasedRlEnvCfg
-from mjlab.envs.mdp import dr
 from mjlab.envs.mdp.actions import JointPositionActionCfg
 from mjlab.managers.action_manager import ActionTermCfg
 from mjlab.managers.command_manager import CommandTermCfg
@@ -23,7 +22,7 @@ from mjlab.scene import SceneCfg
 from mjlab.sim import MujocoCfg, SimulationCfg
 from mjlab.tasks.tracking import mdp
 from mjlab.tasks.tracking.mdp import MotionCommandCfg
-from mjlab.terrains import TerrainEntityCfg
+from mjlab.terrains import TerrainImporterCfg
 from mjlab.utils.noise import UniformNoiseCfg as Unoise
 from mjlab.viewer import ViewerConfig
 
@@ -163,10 +162,12 @@ def make_tracking_env_cfg() -> ManagerBasedRlEnvCfg:
     ),
     "base_com": EventTermCfg(
       mode="startup",
-      func=dr.body_com_offset,
+      func=mdp.randomize_field,
+      domain_randomization=True,
       params={
         "asset_cfg": SceneEntityCfg("robot", body_names=()),  # Set in robot cfg.
         "operation": "add",
+        "field": "body_ipos",
         "ranges": {
           0: (-0.025, 0.025),
           1: (-0.05, 0.05),
@@ -176,7 +177,7 @@ def make_tracking_env_cfg() -> ManagerBasedRlEnvCfg:
     ),
     "encoder_bias": EventTermCfg(
       mode="startup",
-      func=dr.encoder_bias,
+      func=mdp.randomize_encoder_bias,
       params={
         "asset_cfg": SceneEntityCfg("robot"),
         "bias_range": (-0.01, 0.01),
@@ -184,10 +185,12 @@ def make_tracking_env_cfg() -> ManagerBasedRlEnvCfg:
     ),
     "foot_friction": EventTermCfg(
       mode="startup",
-      func=dr.geom_friction,
+      func=mdp.randomize_field,
+      domain_randomization=True,
       params={
         "asset_cfg": SceneEntityCfg("robot", geom_names=()),  # Set per-robot.
         "operation": "abs",
+        "field": "geom_friction",
         "ranges": (0.3, 1.2),
         "shared_random": True,  # All foot geoms share the same friction.
       },
@@ -238,7 +241,7 @@ def make_tracking_env_cfg() -> ManagerBasedRlEnvCfg:
     "self_collisions": RewardTermCfg(
       func=mdp.self_collision_cost,
       weight=-10.0,
-      params={"sensor_name": "self_collision", "force_threshold": 10.0},
+      params={"sensor_name": "self_collision"},
     ),
   }
 
@@ -275,7 +278,7 @@ def make_tracking_env_cfg() -> ManagerBasedRlEnvCfg:
   ##
 
   return ManagerBasedRlEnvCfg(
-    scene=SceneCfg(terrain=TerrainEntityCfg(terrain_type="plane"), num_envs=1),
+    scene=SceneCfg(terrain=TerrainImporterCfg(terrain_type="plane"), num_envs=1),
     observations=observations,
     actions=actions,
     commands=commands,
@@ -286,10 +289,9 @@ def make_tracking_env_cfg() -> ManagerBasedRlEnvCfg:
       origin_type=ViewerConfig.OriginType.ASSET_BODY,
       entity_name="robot",
       body_name="",  # Set per-robot.
-      distance=2.8,
-      fovy=55.0,
+      distance=3.0,
       elevation=-5.0,
-      azimuth=120.0,
+      azimuth=90.0,
     ),
     sim=SimulationCfg(
       nconmax=35,

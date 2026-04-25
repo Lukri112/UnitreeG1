@@ -9,13 +9,11 @@ from dataclasses import replace
 
 from mjlab.envs import ManagerBasedRlEnvCfg
 from mjlab.envs import mdp as envs_mdp
-from mjlab.envs.mdp import dr
 from mjlab.envs.mdp.actions import JointPositionActionCfg
 from mjlab.managers.action_manager import ActionTermCfg
 from mjlab.managers.command_manager import CommandTermCfg
 from mjlab.managers.curriculum_manager import CurriculumTermCfg
 from mjlab.managers.event_manager import EventTermCfg
-from mjlab.managers.metrics_manager import MetricsTermCfg
 from mjlab.managers.observation_manager import ObservationGroupCfg, ObservationTermCfg
 from mjlab.managers.reward_manager import RewardTermCfg
 from mjlab.managers.scene_entity_config import SceneEntityCfg
@@ -25,7 +23,7 @@ from mjlab.sensor import GridPatternCfg, ObjRef, RayCastSensorCfg
 from mjlab.sim import MujocoCfg, SimulationCfg
 from mjlab.tasks.velocity import mdp
 from mjlab.tasks.velocity.mdp import UniformVelocityCommandCfg
-from mjlab.terrains import TerrainEntityCfg
+from mjlab.terrains import TerrainImporterCfg
 from mjlab.terrains.config import ROUGH_TERRAINS_CFG
 from mjlab.utils.noise import UniformNoiseCfg as Unoise
 from mjlab.viewer import ViewerConfig
@@ -35,21 +33,6 @@ import src.tasks.velocity.mdp as mdp
 
 def make_velocity_env_cfg() -> ManagerBasedRlEnvCfg:
   """Create base velocity tracking task configuration."""
-
-  ##
-  # Sensors
-  ##
-
-  terrain_scan = RayCastSensorCfg(
-    name="terrain_scan",
-    frame=ObjRef(type="body", name="", entity="robot"),  # Set per-robot.
-    ray_alignment="yaw",
-    pattern=GridPatternCfg(size=(1.6, 1.0), resolution=0.1),
-    max_distance=5.0,
-    exclude_parent_body=True,
-    debug_vis=True,
-    viz=RayCastSensorCfg.VizCfg(show_normals=True),
-  )
 
   ##
   # Observations
@@ -69,10 +52,6 @@ def make_velocity_env_cfg() -> ManagerBasedRlEnvCfg:
       func=mdp.generated_commands,
       params={"command_name": "twist"},
     ),
-    "phase": ObservationTermCfg(
-      func=mdp.phase,
-      params={"period": 0.6, "command_name": "twist"},
-    ),
     "joint_pos": ObservationTermCfg(
       func=mdp.joint_pos_rel,
       noise=Unoise(n_min=-0.01, n_max=0.01),
@@ -86,7 +65,7 @@ def make_velocity_env_cfg() -> ManagerBasedRlEnvCfg:
       func=envs_mdp.height_scan,
       params={"sensor_name": "terrain_scan"},
       noise=Unoise(n_min=-0.1, n_max=0.1),
-      scale=1 / terrain_scan.max_distance,
+      clip=(-1.0, 1.0),
     ),
   }
 
@@ -100,7 +79,7 @@ def make_velocity_env_cfg() -> ManagerBasedRlEnvCfg:
     "height_scan": ObservationTermCfg(
       func=envs_mdp.height_scan,
       params={"sensor_name": "terrain_scan"},
-      scale=1 / terrain_scan.max_distance,
+      clip=(-1.0, 1.0),
     ),
     "foot_height": ObservationTermCfg(
       func=mdp.foot_height,
@@ -132,16 +111,6 @@ def make_velocity_env_cfg() -> ManagerBasedRlEnvCfg:
       concatenate_terms=True,
       enable_corruption=False,
       history_length=1,
-    ),
-  }
-
-  ##
-  # Metrics
-  ##
-
-  metrics = {
-    "mean_action_acc": MetricsTermCfg(
-      func=mdp.mean_action_acc,
     ),
   }
 
@@ -192,7 +161,7 @@ def make_velocity_env_cfg() -> ManagerBasedRlEnvCfg:
         "pose_range": {
           "x": (-0.5, 0.5),
           "y": (-0.5, 0.5),
-          "z": (0.0, 0.0),
+          "z": (0.01, 0.05),
           "yaw": (-3.14, 3.14),
         },
         "velocity_range": {},
@@ -202,8 +171,8 @@ def make_velocity_env_cfg() -> ManagerBasedRlEnvCfg:
       func=mdp.reset_joints_by_offset,
       mode="reset",
       params={
-        "position_range": (-0.0, 0.0),
-        "velocity_range": (-0.0, 0.0),
+        "position_range": (-0.5, 0.5),
+        "velocity_range": (-0.5, 0.5),
         "asset_cfg": SceneEntityCfg("robot", joint_names=(".*",)),
       },
     ),
@@ -224,17 +193,19 @@ def make_velocity_env_cfg() -> ManagerBasedRlEnvCfg:
     ),
     "foot_friction": EventTermCfg(
       mode="startup",
-      func=dr.geom_friction,
+      func=mdp.randomize_field,
+      domain_randomization=True,
       params={
         "asset_cfg": SceneEntityCfg("robot", geom_names=()),  # Set per-robot.
         "operation": "abs",
+        "field": "geom_friction",
         "ranges": (0.3, 1.2),
         "shared_random": True,  # All foot geoms share the same friction.
       },
     ),
     "encoder_bias": EventTermCfg(
       mode="startup",
-      func=dr.encoder_bias,
+      func=mdp.randomize_encoder_bias,
       params={
         "asset_cfg": SceneEntityCfg("robot"),
         "bias_range": (-0.015, 0.015),
@@ -242,14 +213,16 @@ def make_velocity_env_cfg() -> ManagerBasedRlEnvCfg:
     ),
     "base_com": EventTermCfg(
       mode="startup",
-      func=dr.body_com_offset,
+      func=mdp.randomize_field,
+      domain_randomization=True,
       params={
         "asset_cfg": SceneEntityCfg("robot", body_names=()),  # Set per-robot.
         "operation": "add",
+        "field": "body_ipos",
         "ranges": {
-          0: (-0.025, 0.025),
-          1: (-0.025, 0.025),
-          2: (-0.03, 0.03),
+          0: (-0.05, 0.05),
+          1: (-0.05, 0.05),
+          2: (-0.05, 0.05),
         },
       },
     ),
@@ -270,16 +243,12 @@ def make_velocity_env_cfg() -> ManagerBasedRlEnvCfg:
       weight=1.0,
       params={"command_name": "twist", "std": math.sqrt(0.5)},
     ),
-    "body_orientation_l2": RewardTermCfg(
-      func=mdp.body_orientation_l2,
-      weight=-1.0,
-      params={"asset_cfg": SceneEntityCfg("robot", body_names=())},  # Set per-robot.
-    ),
+    "flat_orientation_l2": RewardTermCfg(func=mdp.flat_orientation_l2, weight=-5.0),
     "pose": RewardTermCfg(
       func=mdp.variable_posture,
       weight=1.0,
       params={
-        "asset_cfg": SceneEntityCfg("robot", joint_names=".*"),
+        "asset_cfg": SceneEntityCfg("robot", joint_names=(".*",)),
         "command_name": "twist",
         "std_standing": {},  # Set per-robot.
         "std_walking": {},  # Set per-robot.
@@ -302,18 +271,6 @@ def make_velocity_env_cfg() -> ManagerBasedRlEnvCfg:
     "joint_acc_l2": RewardTermCfg(func=mdp.joint_acc_l2, weight=-2.5e-7),
     "joint_pos_limits": RewardTermCfg(func=mdp.joint_pos_limits, weight=-10.0),
     "action_rate_l2": RewardTermCfg(func=mdp.action_rate_l2, weight=-0.05),
-    "foot_gait": RewardTermCfg(
-      func=mdp.feet_gait,
-      weight=0.5,
-      params={
-        "period": 0.6,
-        "offset": [0.0, 0.5],
-        "threshold": 0.56,
-        "command_threshold": 0.1,
-        "command_name": "twist",
-        "sensor_name": "feet_ground_contact",
-      }
-    ),
     "foot_clearance": RewardTermCfg(
       func=mdp.feet_clearance,
       weight=-1.0,
@@ -341,15 +298,6 @@ def make_velocity_env_cfg() -> ManagerBasedRlEnvCfg:
         "sensor_name": "feet_ground_contact",
         "command_name": "twist",
         "command_threshold": 0.1,
-      },
-    ),
-    "stand_still": RewardTermCfg(
-      func=mdp.stand_still,
-      weight=-1.0,
-      params={
-        "command_name": "twist",
-        "command_threshold": 0.1,
-        "asset_cfg": SceneEntityCfg("robot", joint_names=".*"),
       },
     ),
   }
@@ -391,9 +339,20 @@ def make_velocity_env_cfg() -> ManagerBasedRlEnvCfg:
   # Assemble and return
   ##
 
+  terrain_scan = RayCastSensorCfg(
+    name="terrain_scan",
+    frame=ObjRef(type="body", name="", entity="robot"),  # Set per-robot.
+    ray_alignment="yaw",
+    pattern=GridPatternCfg(size=(1.6, 1.0), resolution=0.1),
+    max_distance=5.0,
+    exclude_parent_body=True,
+    debug_vis=True,
+    viz=RayCastSensorCfg.VizCfg(show_normals=True),
+  )
+
   return ManagerBasedRlEnvCfg(
     scene=SceneCfg(
-      terrain=TerrainEntityCfg(
+      terrain=TerrainImporterCfg(
         terrain_type="generator",
         terrain_generator=replace(ROUGH_TERRAINS_CFG),
         max_init_terrain_level=5,
@@ -409,7 +368,6 @@ def make_velocity_env_cfg() -> ManagerBasedRlEnvCfg:
     rewards=rewards,
     terminations=terminations,
     curriculum=curriculum,
-    metrics=metrics,
     viewer=ViewerConfig(
       origin_type=ViewerConfig.OriginType.ASSET_BODY,
       entity_name="robot",
