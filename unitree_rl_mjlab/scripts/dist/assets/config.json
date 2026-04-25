@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "projects": [
+    {
+      "name": "Hello World",
+      "id": null,
+      "scenes": [
+        {
+          "name": "Falling Box",
+          "path": "falling_box/scene.mjz",
+          "policies": []
+        }
+      ]
+    }
+  ]
+}
