@@ -41,6 +41,10 @@ Damit kannst du:
 
 Es trainiert **nicht**. Es ist nur zum Testen und Anschauen.
 
+Parameter im Terminal:
+
+python scripts/play.py Unitree-G1-Flat-Crouch-Deploy --checkpoint_file=logs/rsl_rl/g1_velocity/2026-03-26_15-27-07/checkpoint_398000/model_398000.pt
+
 ## Weitere Dateien
 
 ### `list_envs.py`
