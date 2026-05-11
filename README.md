@@ -73,6 +73,7 @@ Falls der vom Container erstellte unitree_ws gesperrt ist für den User (Dateien
     #Check ob NVIDIA Treiber funktionieren
     glxinfo | grep "OpenGL renderer"
     glxinfo | grep "OpenGL vendor"
+    git config --global --add safe.directory '*'
     
   5. Run unitree_full_setup.py
 
