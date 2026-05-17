@@ -1,30 +1,30 @@
-# ROS-2-Foxy-UDP-Velocity-Logger für den Unitree G1
+# ROS-2-Foxy UDP Velocity Logger für Unitree G1
 
-Diese README beschreibt die ROS-2-Foxy-Node zur standardisierten Vorgabe und Aufzeichnung von Velocity-Kommandos für die Crouch-Walking-Versuche mit dem Unitree G1 EDU 29-DOF.
+Diese Node dient zur standardisierten Vorgabe und Aufzeichnung von Velocity-Kommandos für Crouch-Walking-Versuche mit dem Unitree G1 EDU 29-DOF.
 
-Die Node ist für den folgenden Workflow vorgesehen:
+Workflow:
 
 ```text
 ROS-2-Foxy-Node
-    publiziert /cmd_vel zur Nachvollziehbarkeit
-    sendet UDP-Velocity-Command [vx, vy, yaw_rate]
-        ↓
+  ├─ publiziert /cmd_vel zur Nachvollziehbarkeit
+  ├─ sendet UDP [vx, vy, yaw_rate]
+  ↓
 gepatchter g1_controller / observations.h
-        ↓
+  ↓
 velocity_commands-Observation
-        ↓
-ONNX Crouch-Walking Policy
-        ↓
-lowcmd / Unitree G1 oder MuJoCo-Simulation
+  ↓
+ONNX Crouch-Walking-Policy
+  ↓
+lowcmd → MuJoCo oder realer Unitree G1
 ```
 
-Die zugehörige Änderung auf Controller-Seite befindet sich in:
+Die Controller-seitige Änderung befindet sich in:
 
 ```text
 unitree_rl_mjlab/deploy/include/isaaclab/envs/mdp/observations/observations.h
 ```
 
-Dort wurde die bestehende `velocity_commands`-Observation um einen UDP-Override erweitert. Wenn ein frisches UDP-Kommando verfügbar ist, wird dieses als Policy-Command verwendet. Wenn kein frisches UDP-Paket verfügbar ist, bleibt das originale Joystick-/Wirelesscontroller-Verhalten aktiv.
+Dort wird die bestehende `velocity_commands`-Observation um einen UDP-Override erweitert: frische UDP-Kommandos haben Priorität, andernfalls bleibt das originale Joystick-/Wirelesscontroller-Verhalten aktiv.
 
 ---
 
@@ -34,65 +34,50 @@ Dort wurde die bestehende `velocity_commands`-Observation um einen UDP-Override 
 g1_velocity_udp_logger_node.py
 ```
 
-Die Node übernimmt folgende Aufgaben:
+Funktionen:
 
 ```text
-1. Publiziert das Sollkommando auf /cmd_vel.
-2. Sendet dasselbe Kommando per UDP an den g1_controller.
-3. Abonniert IMU-Daten.
-4. Abonniert optional Odometrie-Daten.
-5. Speichert alle Rohdaten in eine CSV-Datei.
-6. Speichert zusammengefasste Versuchsmesswerte in eine Summary-CSV-Datei.
+1. /cmd_vel publizieren
+2. UDP-Kommando an g1_controller senden
+3. IMU-Daten loggen
+4. optional Odometrie loggen
+5. Rohdaten-CSV schreiben
+6. Summary-CSV mit Metriken schreiben
 ```
 
-Die Node unterstützt zwei IMU-Nachrichtentypen:
+Unterstützte IMU-Typen:
 
 ```text
 sensor_msgs/msg/Imu
 unitree_hg/msg/IMUState
 ```
 
-Der Typ `unitree_hg/msg/IMUState` wird in der MuJoCo-Simulation verwendet, da dort `/secondary_imu` in diesem Format veröffentlicht wird.
+In der MuJoCo-Simulation ist `/secondary_imu` typischerweise `unitree_hg/msg/IMUState`.
 
 ---
 
-## UDP-Kommandoformat
+## UDP-Format
 
-Der Controller lauscht standardmäßig auf:
-
-```text
-UDP-IP:    127.0.0.1
-UDP-Port:  5005
-```
-
-Das UDP-Paket besteht aus drei `float32`-Werten:
+Standard:
 
 ```text
-[vx, vy, yaw_rate]
+UDP-IP:   127.0.0.1
+UDP-Port: 5005
+Paket:    3x float32 = [vx, vy, yaw_rate]
 ```
 
-Bedeutung:
-
-```text
-vx        Vorwärts-/Rückwärtsgeschwindigkeit [m/s]
-vy        laterale Geschwindigkeit [m/s]
-yaw_rate  Giergeschwindigkeit [rad/s]
-```
-
-Python-Beispiel:
+Beispiel:
 
 ```python
 packet = struct.pack("fff", vx, vy, yaw_rate)
 sock.sendto(packet, ("127.0.0.1", 5005))
 ```
 
-Wenn die ROS-2-Node und der `g1_controller` auf demselben Rechner laufen, wird `127.0.0.1` verwendet. Wenn der Controller auf einem anderen Rechner läuft, muss stattdessen dessen IP-Adresse verwendet werden.
+`127.0.0.1` ist nur korrekt, wenn Node und `g1_ctrl` auf demselben Rechner laufen.
 
 ---
 
-## Finales Versuchsprofil
-
-Für die standardisierten Crouch-Walking-Versuche wurde folgendes Profil gewählt:
+## Standardisiertes Versuchsprofil
 
 ```text
 vx        = 0.30 m/s
@@ -102,7 +87,7 @@ duration  = 10.0 s
 rate      = 50 Hz
 ```
 
-Dieses Profil kombiniert eine Vorwärtsbewegung mit einer Rotationsvorgabe. Es ist dadurch aussagekräftiger als ein rein geradliniger Test und bleibt gleichzeitig innerhalb der in der `deploy.yaml` definierten Command-Grenzen:
+Dieses Profil kombiniert Vorwärtsbewegung und Rotation und bleibt innerhalb der `deploy.yaml`-Grenzen:
 
 ```text
 lin_vel_x: [-0.5, 1.0]
@@ -114,9 +99,13 @@ ang_vel_z: [-1.0, 1.0]
 
 ## Voraussetzungen
 
-Die Node ist für ROS 2 Foxy ausgelegt.
+ROS 2 Foxy unter Ubuntu 20.04 verwendet Python 3.8. Die Node daher mit System-Python starten, nicht mit Conda-Python:
 
-Wichtig: ROS 2 Foxy unter Ubuntu 20.04 verwendet Python 3.8. Die Node sollte daher mit dem System-Python gestartet werden, nicht mit einer Conda-Python-Version.
+```bash
+conda deactivate
+source /opt/ros/foxy/setup.bash
+/usr/bin/python3 g1_velocity_udp_logger_node.py ...
+```
 
 Prüfen:
 
@@ -132,23 +121,11 @@ Erwartet:
 Python 3.8.x
 ```
 
-Falls Conda aktiv ist:
-
-```bash
-conda deactivate
-```
-
-Alternativ direkt mit System-Python starten:
-
-```bash
-/usr/bin/python3 g1_velocity_udp_logger_node.py
-```
-
 ---
 
-## Nutzung in der MuJoCo-Simulation
+## Simulation
 
-In der aktuellen MuJoCo-Simulation sind typischerweise folgende Topics verfügbar:
+Typische Simulations-Topics:
 
 ```text
 /lowcmd
@@ -158,18 +135,18 @@ In der aktuellen MuJoCo-Simulation sind typischerweise folgende Topics verfügba
 /wirelesscontroller
 ```
 
-In dieser Simulationskonfiguration wird kein Odometrie-Topic veröffentlicht. Deshalb muss Odometrie-Logging in der Simulation deaktiviert werden.
+In der aktuellen MuJoCo-Simulation wird kein Odometrie-Topic veröffentlicht. Deshalb `enable_odom:=false` verwenden.
 
-### 1. MuJoCo starten
+### Start
+
+Terminal 1:
 
 ```bash
 cd ~/unitree_rl_mjlab
 ./simulate/build/unitree_mujoco
 ```
 
-### 2. g1_controller starten
-
-In einem zweiten Terminal:
+Terminal 2:
 
 ```bash
 source /opt/ros/foxy/setup.bash
@@ -179,15 +156,7 @@ cd ~/unitree_rl_mjlab/deploy/robots/g1/build
 ./g1_ctrl --network=lo
 ```
 
-Wenn der UDP-Override korrekt aktiv ist, sollte beim Start beziehungsweise beim ersten Aufruf der Observation folgende Meldung erscheinen:
-
-```text
-[velocity_commands] UDP override listening on port 5005.
-```
-
-### 3. Logger-Node starten
-
-In einem dritten Terminal:
+Terminal 3:
 
 ```bash
 source /opt/ros/foxy/setup.bash
@@ -211,36 +180,40 @@ cd ~/unitree_rl_mjlab/scripts/metrics
   -p csv_path:=sim_trial_001.csv
 ```
 
-### Messbare Größen in der Simulation
+Erwartete Controller-Meldung:
 
-In der Simulation können mit dieser Node folgende Größen ausgewertet werden:
+```text
+[velocity_commands] UDP override listening on port 5005.
+```
+
+### In der Simulation messbar
 
 ```text
 Yaw-Rate-Tracking über IMU gyroscope.z
 Roll-/Pitch-Stabilität
 IMU-Beschleunigungsnorm
-Fall-/Kippindikator über Roll-/Pitch-Grenzen
-UDP-Sendestatus
-Laufzeit des Versuchs
+Fall-/Kippindikator über Roll/Pitch
+UDP-Status
+Laufzeit
 ```
 
-Da aktuell kein Odometrie-Topic verfügbar ist, können in der Simulation folgende Größen nicht direkt gemessen werden:
+Nicht messbar ohne Odometrie:
 
 ```text
-tatsächliche vx
-tatsächliche vy
+vx_actual
+vy_actual
 Base Height
 x/y-Position
 zurückgelegte Distanz
 ```
 
-Diese Felder bleiben in der Simulations-CSV und Summary-CSV als `NaN` erhalten.
+Diese Werte bleiben in der Simulations-CSV als `NaN`.
 
 ---
 
-## Nutzung am realen Unitree G1
+## Realer Unitree G1
 
-Am realen Roboter sind typischerweise zusätzliche Topics verfügbar, unter anderem:
+Relevante Topics können sein:
 
 ```text
 /dog_imu_raw
@@ -250,14 +223,14 @@ Am realen Roboter sind typischerweise zusätzliche Topics verfügbar, unter ande
 /sportmodestate
 ```
 
-Vor dem Start sollte der Nachrichtentyp geprüft werden:
+Vorher prüfen:
 
 ```bash
 ros2 topic type /dog_imu_raw
 ros2 topic type /dog_odom
 ```
 
-Wenn `/dog_imu_raw` den Typ `sensor_msgs/msg/Imu` verwendet:
+Wenn `/dog_imu_raw` `sensor_msgs/msg/Imu` ist:
 
 ```bash
 source /opt/ros/foxy/setup.bash
@@ -282,7 +255,7 @@ cd ~/unitree_rl_mjlab/scripts/metrics
   -p csv_path:=real_trial_001.csv
 ```
 
-Wenn das verwendete IMU-Topic den Typ `unitree_hg/msg/IMUState` verwendet, wird stattdessen gesetzt:
+Wenn das IMU-Topic `unitree_hg/msg/IMUState` ist:
 
 ```bash
 -p imu_mode:=unitree_hg
@@ -290,20 +263,20 @@ Wenn das verwendete IMU-Topic den Typ `unitree_hg/msg/IMUState` verwendet, wird 
 
 ---
 
-## Ausgabedateien
+## CSV-Ausgaben
 
-Pro Versuch erzeugt die Node zwei CSV-Dateien.
+Pro Versuch entstehen zwei Dateien.
 
 ### Rohdaten-CSV
 
-Beispiele:
+Beispiel:
 
 ```text
 sim_trial_001.csv
 real_trial_001.csv
 ```
 
-Diese Datei enthält eine Zeile pro Messzeitpunkt. Wichtige Spalten sind:
+Wichtige Spalten:
 
 ```text
 time_s
@@ -336,14 +309,14 @@ fall_detected_manual
 
 ### Summary-CSV
 
-Beispiele:
+Beispiel:
 
 ```text
 sim_trial_001_summary.csv
 real_trial_001_summary.csv
 ```
 
-Diese Datei enthält zusammengefasste Versuchsmesswerte:
+Wichtige Metriken:
 
 ```text
 successful_trial
@@ -373,13 +346,13 @@ imu_acc_norm_mean_mps2
 imu_acc_norm_std_mps2
 ```
 
-In der Simulation sind odometriebasierte Werte erwartungsgemäß `NaN`, solange kein Odometrie-Publisher vorhanden ist.
+In der Simulation sind odometriebasierte Werte `NaN`, solange kein Odometrie-Publisher vorhanden ist.
 
 ---
 
 ## Bewertungsmetriken
 
-Die Node ist auf die Auswertung der Crouch-Walking-Policy ausgelegt. Relevante Metriken sind:
+Die Node ist auf die Bewertung der Crouch-Walking-Policy ausgelegt:
 
 ```text
 Erfolgsstatus
@@ -387,13 +360,13 @@ Laufdauer
 Passive-Mode-Markierung
 Fallindikator
 Yaw-Rate-Tracking
-Velocity-Tracking, falls Odometrie verfügbar ist
-Base-Height-Stabilität, falls Odometrie verfügbar ist
+Velocity-Tracking, falls Odometrie verfügbar
+Base-Height-Stabilität, falls Odometrie verfügbar
 Roll-/Pitch-Stabilität
 IMU-Beschleunigungsniveau
 ```
 
-Die wichtigsten Fehlergrößen lauten:
+Fehlergrößen:
 
 ```text
 yaw_rate_error_imu  = yaw_rate_cmd - imu_angular_velocity_z
@@ -402,13 +375,13 @@ vx_error_odom       = vx_cmd - odom_vx
 vy_error_odom       = vy_cmd - odom_vy
 ```
 
-Die RMSE-Werte werden ausschließlich über die aktive Kommando-Phase berechnet.
+RMSE-Werte werden nur über die aktive Kommando-Phase berechnet.
 
 ---
 
 ## Manuelle Annotationen
 
-Nicht alle Ereignisse lassen sich automatisch aus IMU- oder Odometrie-Daten ableiten. Deshalb unterstützt die Node manuelle Markierungen:
+Für Ereignisse, die nicht zuverlässig automatisch erkannt werden:
 
 ```text
 passive_mode_triggered
@@ -416,44 +389,32 @@ fall_detected_manual
 operator_note
 ```
 
-Beispiel für einen Versuch mit unerklärlicher Passive-Mode-Umschaltung ohne aufgezeichneten Sturz:
+Beispiel:
 
 ```bash
 -p passive_mode_triggered:=true \
 -p operator_note:="unexplained passive mode without recorded fall"
 ```
 
-Diese Information wird in die Summary-CSV übernommen.
-
 ---
 
-## Sicherheitsverhalten
+## Sicherheit
 
-Nach Ablauf der aktiven Versuchsdauer sendet die Node standardmäßig noch für eine Sekunde ein Nullkommando:
+Nach der aktiven Versuchsdauer sendet die Node standardmäßig 1 s lang Nullkommandos:
 
 ```text
 send_zero_after_duration_s = 1.0
 ```
 
-Dies gilt sowohl für `/cmd_vel` als auch für UDP.
-
-Zusätzlich besitzt der Controller-seitige UDP-Override ein Timeout. Wenn kein frisches UDP-Paket empfangen wird, fällt der Controller automatisch auf das originale Joystick-/Wirelesscontroller-Verhalten zurück.
+Dies gilt für `/cmd_vel` und UDP. Zusätzlich besitzt der Controller-seitige UDP-Override ein Timeout; ohne frisches UDP-Paket fällt der Controller auf das originale Joystick-/Wirelesscontroller-Verhalten zurück.
 
 ---
 
 ## Troubleshooting
 
-### rclpy-Fehler
+### `rclpy._rclpy` fehlt
 
-Wenn folgender Fehler erscheint:
-
-```text
-ModuleNotFoundError: No module named 'rclpy._rclpy'
-```
-
-wird die Node wahrscheinlich mit einer inkompatiblen Conda-Python-Version gestartet.
-
-Lösung:
+Ursache: falsche Python-Version, meist Conda.
 
 ```bash
 conda deactivate
@@ -461,7 +422,7 @@ source /opt/ros/foxy/setup.bash
 /usr/bin/python3 g1_velocity_udp_logger_node.py ...
 ```
 
-### Keine IMU-Daten in der CSV
+### Keine IMU-Daten
 
 Topic-Typ prüfen:
 
@@ -470,49 +431,49 @@ ros2 topic type /secondary_imu
 ros2 topic type /dog_imu_raw
 ```
 
-Wenn das Topic `unitree_hg/msg/IMUState` ist:
+Dann passenden Modus wählen:
 
 ```bash
 -p imu_mode:=unitree_hg
 ```
 
-Wenn das Topic `sensor_msgs/msg/Imu` ist:
+oder:
 
 ```bash
 -p imu_mode:=sensor_msgs
 ```
 
-### Keine Odometrie-Werte
+### Keine Odometrie
 
-In der aktuellen MuJoCo-Simulation wird kein Odometrie-Topic veröffentlicht. Deshalb in der Simulation verwenden:
+Simulation:
 
 ```bash
 -p enable_odom:=false
 ```
 
-Am realen Roboter kann `/dog_odom` verwendet werden, sofern es als `nav_msgs/msg/Odometry` verfügbar ist.
+Realer Roboter:
 
-### UDP-Kommando bewegt den Roboter nicht
+```bash
+-p enable_odom:=true
+-p odom_topic:=/dog_odom
+```
 
-Prüfen, ob der gepatchte `observations.h`-Code gebaut wurde und `g1_ctrl` folgende Meldung ausgibt:
+### UDP wirkt nicht
+
+Prüfen:
 
 ```text
 [velocity_commands] UDP override listening on port 5005.
-```
-
-Außerdem prüfen:
-
-```text
 udp_ip   = 127.0.0.1
 udp_port = 5005
 ```
 
-`127.0.0.1` ist nur korrekt, wenn Node und `g1_ctrl` auf demselben Rechner laufen.
+`127.0.0.1` nur verwenden, wenn Node und `g1_ctrl` auf demselben Rechner laufen.
 
 ---
 
-## Hinweise für die Masterarbeit
+## Hinweis für die Masterarbeit
 
-Die MuJoCo-basierte Sim2Sim-Stufe liefert in dieser Konfiguration quantitative IMU-Metriken, insbesondere Yaw-Rate-Tracking sowie Roll-/Pitch-Stabilität. Eine vollständige Auswertung von translatorischer Geschwindigkeit und Base Height erfordert Odometrie und erfolgt daher auf dem realen Roboter über `/dog_odom`.
+Die MuJoCo-Sim2Sim-Stufe liefert in dieser Konfiguration quantitative IMU-Metriken, insbesondere Yaw-Rate-Tracking sowie Roll-/Pitch-Stabilität. Translatorische Geschwindigkeit und Base Height erfordern Odometrie und werden daher im Realversuch über `/dog_odom` ausgewertet.
 
-Die Sim2Sim-Stufe dient damit primär als funktionale Prüfung der Deployment-Kette. Die vollständige quantitative Bewertung von Velocity-Tracking, Base-Height-Stabilität, Erfolgsrate und Passive-Mode-Verhalten erfolgt in den standardisierten Realversuchen.
+Damit dient Sim2Sim primär der funktionalen Prüfung der Deployment-Kette, während die vollständige quantitative Bewertung in den Realversuchen erfolgt.
