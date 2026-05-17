@@ -5,6 +5,18 @@
 
 #include "isaaclab/envs/manager_based_rl_env.h"
 
+#include <algorithm>
+#include <array>
+#include <chrono>
+#include <cmath>
+#include <cstring>
+#include <iostream>
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+#include <fcntl.h>
+
 namespace isaaclab
 {
 namespace mdp
@@ -77,7 +89,6 @@ REGISTER_OBSERVATION(joint_pos_rel)
             data = tmp_data;
         }
     } catch(const std::exception& e) {
-    
     }
 
     return data;
@@ -111,13 +122,162 @@ REGISTER_OBSERVATION(last_action)
 REGISTER_OBSERVATION(velocity_commands)
 {
     std::vector<float> obs(3);
-    auto & joystick = env->robot->data.joystick;
 
     const auto cfg = env->cfg["commands"]["base_velocity"]["ranges"];
 
-    obs[0] = std::clamp(joystick->ly(), cfg["lin_vel_x"][0].as<float>(), cfg["lin_vel_x"][1].as<float>());
-    obs[1] = std::clamp(-joystick->lx(), cfg["lin_vel_y"][0].as<float>(), cfg["lin_vel_y"][1].as<float>());
-    obs[2] = std::clamp(-joystick->rx(), cfg["ang_vel_z"][0].as<float>(), cfg["ang_vel_z"][1].as<float>());
+    // ------------------------------------------------------------------
+    // UDP override for reproducible velocity experiments.
+    //
+    // UDP packet format:
+    //   3 float32 values: [vx, vy, yaw_rate]
+    //
+    // UDP port:
+    //   5005
+    //
+    // Behavior:
+    //   fresh UDP packet <= 0.5 s old  -> use UDP command
+    //   no fresh UDP packet            -> use original joystick behavior
+    // ------------------------------------------------------------------
+
+    static bool udp_initialized = false;
+    static int udp_sockfd = -1;
+    static std::array<float, 3> udp_cmd = {0.0f, 0.0f, 0.0f};
+    static auto last_udp_time = std::chrono::steady_clock::time_point::min();
+
+    constexpr int UDP_CMD_PORT = 5005;
+    constexpr double UDP_CMD_TIMEOUT_S = 0.5;
+
+    if (!udp_initialized)
+    {
+        udp_initialized = true;
+
+        udp_sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+
+        if (udp_sockfd >= 0)
+        {
+            int reuse = 1;
+            setsockopt(udp_sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+
+            sockaddr_in addr;
+            std::memset(&addr, 0, sizeof(addr));
+            addr.sin_family = AF_INET;
+            addr.sin_addr.s_addr = INADDR_ANY;
+            addr.sin_port = htons(UDP_CMD_PORT);
+
+            if (bind(udp_sockfd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) < 0)
+            {
+                std::cerr << "[velocity_commands] UDP bind failed on port "
+                          << UDP_CMD_PORT
+                          << ". Falling back to joystick only."
+                          << std::endl;
+
+                close(udp_sockfd);
+                udp_sockfd = -1;
+            }
+            else
+            {
+                int flags = fcntl(udp_sockfd, F_GETFL, 0);
+                if (flags >= 0)
+                {
+                    fcntl(udp_sockfd, F_SETFL, flags | O_NONBLOCK);
+                }
+
+                std::cout << "[velocity_commands] UDP override listening on port "
+                          << UDP_CMD_PORT
+                          << std::endl;
+            }
+        }
+        else
+        {
+            std::cerr << "[velocity_commands] Could not create UDP socket. "
+                      << "Falling back to joystick only."
+                      << std::endl;
+        }
+    }
+
+    // Read all available UDP packets and keep the newest one.
+    if (udp_sockfd >= 0)
+    {
+        while (true)
+        {
+            float buffer[3] = {0.0f, 0.0f, 0.0f};
+
+            ssize_t n = recvfrom(
+                udp_sockfd,
+                buffer,
+                sizeof(buffer),
+                MSG_DONTWAIT,
+                nullptr,
+                nullptr
+            );
+
+            if (n == static_cast<ssize_t>(sizeof(buffer)))
+            {
+                udp_cmd[0] = buffer[0];
+                udp_cmd[1] = buffer[1];
+                udp_cmd[2] = buffer[2];
+
+                last_udp_time = std::chrono::steady_clock::now();
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    auto now = std::chrono::steady_clock::now();
+    double udp_age_s = 999.0;
+
+    if (last_udp_time != std::chrono::steady_clock::time_point::min())
+    {
+        udp_age_s = std::chrono::duration<double>(now - last_udp_time).count();
+    }
+
+    // 1. Fresh UDP command has priority.
+    if (udp_age_s <= UDP_CMD_TIMEOUT_S)
+    {
+        obs[0] = std::clamp(
+            udp_cmd[0],
+            cfg["lin_vel_x"][0].as<float>(),
+            cfg["lin_vel_x"][1].as<float>()
+        );
+
+        obs[1] = std::clamp(
+            udp_cmd[1],
+            cfg["lin_vel_y"][0].as<float>(),
+            cfg["lin_vel_y"][1].as<float>()
+        );
+
+        obs[2] = std::clamp(
+            udp_cmd[2],
+            cfg["ang_vel_z"][0].as<float>(),
+            cfg["ang_vel_z"][1].as<float>()
+        );
+
+        return obs;
+    }
+
+    // 2. Original Unitree/MJLab behavior.
+    auto & joystick = env->robot->data.joystick;
+
+    obs[0] = std::clamp(
+        joystick->ly(),
+        cfg["lin_vel_x"][0].as<float>(),
+        cfg["lin_vel_x"][1].as<float>()
+    );
+
+    obs[1] = std::clamp(
+        -joystick->lx(),
+        cfg["lin_vel_y"][0].as<float>(),
+        cfg["lin_vel_y"][1].as<float>()
+    );
+
+    obs[2] = std::clamp(
+        -joystick->rx(),
+        cfg["ang_vel_z"][0].as<float>(),
+        cfg["ang_vel_z"][1].as<float>()
+    );
 
     return obs;
 }
