@@ -1,0 +1,41 @@
+  #Neues Terminal und Conda deaktivieren da es nur mit Python 3.8 funktioniert
+
+  ------------------------------------------------------------------- Real Robot Unitree G1 --------------------------------------------------------------------------
+
+conda deactivate
+cd ~/unitree_rl_mjlab/scripts/metrics
+
+python3 g1_velocity_udp_logger_node.py \
+  --ros-args \
+  -p trial_id:=1 \
+  -p vx:=0.30 \
+  -p vy:=0.00 \
+  -p yaw_rate:=0.50 \
+  -p duration:=10.0 \
+  -p publish_rate:=50.0 \
+  -p udp_ip:=127.0.0.1 \
+  -p udp_port:=5005 \
+  -p imu_mode:=unitree_hg \
+  -p imu_topic:=/dog_imu_raw \
+  -p odom_topic:=/dog_odom \
+  -p csv_path:=g1_trial_001.csv
+
+  ------------------------------------------------------------------- Simulation in Mujoco --------------------------------------------------------------------------
+
+conda deactivate
+cd ~/unitree_rl_mjlab/scripts/metrics
+
+python3 g1_velocity_udp_logger_node.py \
+  --ros-args \
+  -p trial_id:=1 \
+  -p vx:=0.30 \
+  -p vy:=0.00 \
+  -p yaw_rate:=0.50 \
+  -p duration:=10.0 \
+  -p publish_rate:=50.0 \
+  -p udp_ip:=127.0.0.1 \
+  -p udp_port:=5005 \
+  -p imu_mode:=unitree_hg \
+  -p imu_topic:=/secondary_imu \
+  -p enable_odom:=false \
+  -p csv_path:=sim_trial_001.csv
